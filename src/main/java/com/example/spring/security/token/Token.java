@@ -4,6 +4,8 @@ import com.example.spring.security.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -14,7 +16,7 @@ public class Token {
     @Id
     @GeneratedValue
     private Integer id;
-    private String token;
+    private String jwtToken;
 
     @Enumerated(EnumType.STRING)
     private TokenType tokenType;
@@ -25,7 +27,7 @@ public class Token {
     @JoinColumn(name = "user_id")
     @ToString.Exclude
     private User user;
-
-    //TODO add login, logout time
+    private LocalDateTime logInTime;
+    private LocalDateTime logOutTime;
 
 }

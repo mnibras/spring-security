@@ -13,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -45,32 +46,28 @@ public class AuthenticationService {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
         User user = userRepository.findByUsername(authRequest.getUsername()).orElseThrow();
         String jwtToken = jwtService.generateToken(user);
-        revokeAllExistingTokens(user);
+        deleteAllExistingTokens(user);
         saveUserToken(user, jwtToken);
         return AuthResponse.builder()
                 .token(jwtToken)
                 .build();
     }
 
-    private void revokeAllExistingTokens(User user) {
-        List<Token> validTokens = tokenRepository.findByUserAndExpiredAndRevoked(user, false, false);
-        if (!validTokens.isEmpty()) {
-            validTokens.forEach(token -> {
-                token.setExpired(true);
-                token.setRevoked(true);
-            });
-            tokenRepository.saveAll(validTokens);
-            //TODO: instead we can delete the existing tokens (invalidate) for the user
+    private void deleteAllExistingTokens(User user) {
+        List<Token> existingTokensForUser = tokenRepository.findByUser(user);
+        if (!existingTokensForUser.isEmpty()) {
+            tokenRepository.deleteAll(existingTokensForUser);
         }
     }
 
     private void saveUserToken(User savedUser, String jwtToken) {
         Token token = Token.builder()
-                .token(jwtToken)
+                .jwtToken(jwtToken)
                 .tokenType(TokenType.BEARER)
                 .user(savedUser)
                 .expired(false)
                 .revoked(false)
+                .logInTime(LocalDateTime.now())
                 .build();
         tokenRepository.save(token);
     }
