@@ -8,6 +8,7 @@ import com.example.spring.security.user.Role;
 import com.example.spring.security.user.User;
 import com.example.spring.security.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationService {
 
     private final UserRepository userRepository;
@@ -37,6 +39,7 @@ public class AuthenticationService {
         User savedUser = userRepository.save(user);
         String jwtToken = jwtService.generateToken(user);
         saveUserToken(savedUser, jwtToken);
+        log.info("New user registered successfully. username: {}", registerRequest.getUsername());
         return AuthResponse.builder()
                 .token(jwtToken)
                 .build();
@@ -48,6 +51,7 @@ public class AuthenticationService {
         String jwtToken = jwtService.generateToken(user);
         deleteAllExistingTokens(user);
         saveUserToken(user, jwtToken);
+        log.info("User authenticated successfully. username: {}", authRequest.getUsername());
         return AuthResponse.builder()
                 .token(jwtToken)
                 .build();
